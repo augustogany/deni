@@ -2115,6 +2115,10 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['user'],
   data: function data() {
@@ -2122,21 +2126,29 @@ __webpack_require__.r(__webpack_exports__);
       messages: [],
       newMessage: null,
       activeFriend: null,
+      typingFriend: {},
+      onlineFriends: [],
       users: [],
       activeUser: false,
       typingTimer: false
     };
   },
   created: function created() {
+    var _this = this;
+
     this.fetchUsers();
-    this.fetchMessages();
+    Echo["private"]('privatechat' + this.user.id).listen('PrivateMessageSent', function (e) {
+      _this.activeFriend = e.message.user_id;
+
+      _this.messages.push(e.message);
+    });
   },
   computed: {
     friends: function friends() {
-      var _this = this;
+      var _this2 = this;
 
       return this.users.filter(function (user) {
-        return user.id !== _this.user.id;
+        return user.id !== _this2.user.id;
       });
     }
   },
@@ -2146,30 +2158,35 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   methods: {
+    onTyping: function onTyping() {
+      Echo["private"]('privatechat.' + this.activeFriend).whisper('typing', {
+        user: this.user
+      });
+    },
     fetchMessages: function fetchMessages() {
-      var _this2 = this;
+      var _this3 = this;
 
       if (!this.activeFriend) {
         return alert('Porfavor seleccione un amigo');
       }
 
       axios.get('/private-messages/' + this.activeFriend).then(function (response) {
-        _this2.messages = response.data;
+        _this3.messages = response.data;
       });
     },
     fetchUsers: function fetchUsers() {
-      var _this3 = this;
+      var _this4 = this;
 
       axios.get('/users').then(function (response) {
-        _this3.users = response.data;
+        _this4.users = response.data;
 
-        if (_this3.friends.length > 0) {
-          _this3.activeFriend = _this3.friends[0].id;
+        if (_this4.friends.length > 0) {
+          _this4.activeFriend = _this4.friends[0].id;
         }
       });
     },
     sendMessage: function sendMessage() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (!this.newMessage) {
         return alert('por favor escriba el mansaje');
@@ -2186,9 +2203,9 @@ __webpack_require__.r(__webpack_exports__);
       axios.post('/private-messages/' + this.activeFriend, {
         message: this.newMessage
       }).then(function (response) {
-        _this4.newMessage = null;
+        _this5.newMessage = null;
 
-        _this4.messages.push(response.data.message);
+        _this5.messages.push(response.data.message);
       });
     }
   }
@@ -48405,25 +48422,37 @@ var render = function() {
               _c(
                 "ul",
                 { staticClass: "contacts" },
-                _vm._l(_vm.users, function(user, index) {
-                  return _c("li", { key: index }, [
-                    _c("div", { staticClass: "d-flex bd-highlight" }, [
-                      _c("div", { staticClass: "img_cont" }, [
-                        _c("img", {
-                          staticClass: "rounded-circle user_img",
-                          attrs: { src: "storage/" + user.avatar }
-                        }),
+                _vm._l(_vm.friends, function(friend, index) {
+                  return _c(
+                    "li",
+                    {
+                      key: index,
+                      class: friend.id == _vm.activeFriend ? "active" : "",
+                      on: {
+                        click: function($event) {
+                          _vm.activeFriend = friend.id
+                        }
+                      }
+                    },
+                    [
+                      _c("div", { staticClass: "d-flex bd-highlight" }, [
+                        _c("div", { staticClass: "img_cont" }, [
+                          _c("img", {
+                            staticClass: "rounded-circle user_img",
+                            attrs: { src: "storage/" + friend.avatar }
+                          }),
+                          _vm._v(" "),
+                          _c("span", { staticClass: "online_icon" })
+                        ]),
                         _vm._v(" "),
-                        _c("span", { staticClass: "online_icon" })
-                      ]),
-                      _vm._v(" "),
-                      _c("div", { staticClass: "user_info" }, [
-                        _c("span", [_vm._v(_vm._s(user.name))]),
-                        _vm._v(" "),
-                        _c("p", [_vm._v("esta en linea")])
+                        _c("div", { staticClass: "user_info" }, [
+                          _c("span", [_vm._v(_vm._s(friend.name))]),
+                          _vm._v(" "),
+                          _c("p", [_vm._v("esta en linea")])
+                        ])
                       ])
-                    ])
-                  ])
+                    ]
+                  )
                 }),
                 0
               )

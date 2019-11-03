@@ -26,6 +26,7 @@ Route::get('/chats','ChatsController@index')->name('chat');
 Route::get('/private', 'ChatsController@private')->name('private');
 Route::get('/users', 'HomeController@users')->name('users');
 Route::get('/private-messages/{user}', 'MessageController@privateMessages')->name('privateMessages');
+Route::post('/private-messages/{user}', 'MessageController@sendPrivateMessage')->name('privateMessages.store');
 
 Route::get('/messages', 'ChatsController@fetchMessages');
 Route::post('/messages', 'ChatsController@sendMessage');

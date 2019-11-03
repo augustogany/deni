@@ -14,14 +14,18 @@
                     </div>
                     <div class="card-body contacts_body">
                         <ul class="contacts">
-                            <li v-for="(user,index) in users" :key="index">
+                            <li v-for="(friend,index) in friends" 
+							    :class="(friend.id==activeFriend)?'active':''"
+							     :key="index"
+								 @click="activeFriend=friend.id"
+								 >
                                 <div class="d-flex bd-highlight">
                                     <div class="img_cont">
-                                        <img :src="'storage/'+user.avatar" class="rounded-circle user_img">
+                                        <img :src="'storage/'+friend.avatar" class="rounded-circle user_img">
                                         <span class="online_icon"></span>
                                     </div>
                                     <div class="user_info">
-                                        <span>{{user.name}}</span>
+                                        <span>{{friend.name}}</span>
                                         <p>esta en linea</p>
                                     </div>
                                 </div>
@@ -106,6 +110,8 @@
                 messages: [],
 				newMessage: null,
 				activeFriend: null,
+				typingFriend:{},
+				onlineFriends:[],
                 users:[],
                 activeUser: false,
                 typingTimer: false,
@@ -113,7 +119,11 @@
         },
         created() {
 			this.fetchUsers();
-			this.fetchMessages();
+			Echo.private('privatechat'+this.user.id)
+			        .listen('PrivateMessageSent',(e)=>{
+					this.activeFriend=e.message.user_id;
+                     this.messages.push(e.message)
+					});
 		},
 		computed: {
 			 friends(){
@@ -128,6 +138,11 @@
 			}
         },
         methods: {
+			  onTyping(){
+					Echo.private('privatechat.'+this.activeFriend).whisper('typing',{
+					user:this.user
+					});
+				},
             fetchMessages() {
 				  if(!this.activeFriend){
 					return alert('Porfavor seleccione un amigo');
