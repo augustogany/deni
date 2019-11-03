@@ -20,7 +20,13 @@ Route::get('login/{social}/callback', 'SocialController@handleProviderCallback')
 /*
 *Rutas para el chat
 */
+//chat publico
 Route::get('/chats','ChatsController@index')->name('chat');
+//chat privado
+Route::get('/private', 'ChatsController@private')->name('private');
+Route::get('/users', 'HomeController@users')->name('users');
+Route::get('/private-messages/{user}', 'MessageController@privateMessages')->name('privateMessages');
+
 Route::get('/messages', 'ChatsController@fetchMessages');
 Route::post('/messages', 'ChatsController@sendMessage');
 

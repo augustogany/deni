@@ -60,11 +60,11 @@
                     </div>
 					<div class="card-body" v-chat-scroll>
 						<div class="msg_card_body" v-for="(message, index) in messages"   :key="index" >
-							<div :class="{'d-flex justify-content-start mb-4': (message.user.id != user.id), 'd-flex justify-content-end mb-4': !(message.user.id != user.id)}">
+							<div :class="(message.user.id != user.id)? 'd-flex justify-content-start mb-4' : 'd-flex justify-content-end mb-4'">
 								<div class="img_cont_msg">
 									<img :src="'storage/'+message.user.avatar" class="rounded-circle user_img_msg">
 								</div>
-								<div :class="{'msg_cotainer' :(message.user.id != user.id), 'msg_cotainer_send': !(message.user.id != user.id)}">
+								<div :class="(message.user.id != user.id)? 'msg_cotainer' :'msg_cotainer_send'">
 									{{ message.message }}
 									<span class="msg_time">{{message.user.name}}</span>
 								</div>
@@ -85,7 +85,7 @@
 									 placeholder="Escriba su mensage...">
 							</textarea>
 							<div class="input-group-append">
-								<span class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></span>
+								<span class="input-group-text send_btn" @click="sendMessage"><i class="fas fa-location-arrow"></i></span>
 							</div>
                         </div>
 						
@@ -105,7 +105,7 @@
         data() {
             return {
                 messages: [],
-                newMessage: '',
+                newMessage: null,
                 users:[],
                 activeUser: false,
                 typingTimer: false,
@@ -143,12 +143,15 @@
                 })
 			},
 			 sendMessage() {
-                this.messages.push({
-                    user: this.user,
-                    message: this.newMessage
-                });
-                axios.post('messages', {message: this.newMessage});
-                this.newMessage = '';
+				 if(!this.newMessage){
+					return alert('por favor escriba el mansaje');
+				}
+					  this.messages.push({
+							user: this.user,
+							message: this.newMessage
+						});
+						axios.post('messages', {message: this.newMessage});
+						this.newMessage = '';
             },
             sendTypingEvent() {
                 Echo.join('chat')

@@ -12,7 +12,11 @@ class ChatsController extends Controller
     }
 
     public function index(){
-        return view('chat');
+        return view('chats.publico');
+    }
+
+    public function private(){
+        return view('chats.privado');
     }
 
     public function fetchMessages()
