@@ -114,15 +114,40 @@
 				onlineFriends:[],
                 users:[],
                 activeUser: false,
-                typingTimer: false,
+				typingTimer: false,
+				 typingClock:null,
             }
         },
         created() {
 			this.fetchUsers();
-			Echo.private('privatechat'+this.user.id)
+			Echo.join('plchat')
+			         .here((users) => {
+						console.log('online',users);
+						this.onlineFriends=users;
+					})
+					.joining((user) => {
+						this.onlineFriends.push(user);
+						console.log('joining',user.name);
+					})
+					.leaving((user) => {
+						this.onlineFriends.splice(this.onlineFriends.indexOf(user),1);
+						console.log('leaving',user.name);
+					});
+
+			Echo.private('privatechat.'+this.user.id)
 			        .listen('PrivateMessageSent',(e)=>{
 					this.activeFriend=e.message.user_id;
                      this.messages.push(e.message)
+					})
+					.listenForWhisper('typing', (e) => {
+						if(e.user.id==this.activeFriend){
+							this.typingFriend=e.user;
+							
+							if(this.typingClock) clearTimeout();
+							this.typingClock=setTimeout(()=>{
+														this.typingFriend={};
+													},9000);
+						}	
 					});
 		},
 		computed: {
@@ -172,7 +197,6 @@
 						});
 						 axios.post('/private-messages/'+this.activeFriend, {message: this.newMessage}).then(response => {
 									this.newMessage=null;
-									this.messages.push(response.data.message)
 						});
             }
         },

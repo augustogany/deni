@@ -22,6 +22,7 @@ Broadcast::channel('chat', function ($user) {
 Broadcast::channel('privatechat.{receiverid}', function ($user,$receiverid) {
     return auth()->check();
 });
+
 Broadcast::channel('plchat', function ($user) {
     if(auth()->check()){
         return $user;

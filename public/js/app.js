@@ -2130,17 +2130,38 @@ __webpack_require__.r(__webpack_exports__);
       onlineFriends: [],
       users: [],
       activeUser: false,
-      typingTimer: false
+      typingTimer: false,
+      typingClock: null
     };
   },
   created: function created() {
     var _this = this;
 
     this.fetchUsers();
-    Echo["private"]('privatechat' + this.user.id).listen('PrivateMessageSent', function (e) {
+    Echo.join('plchat').here(function (users) {
+      console.log('online', users);
+      _this.onlineFriends = users;
+    }).joining(function (user) {
+      _this.onlineFriends.push(user);
+
+      console.log('joining', user.name);
+    }).leaving(function (user) {
+      _this.onlineFriends.splice(_this.onlineFriends.indexOf(user), 1);
+
+      console.log('leaving', user.name);
+    });
+    Echo["private"]('privatechat.' + this.user.id).listen('PrivateMessageSent', function (e) {
       _this.activeFriend = e.message.user_id;
 
       _this.messages.push(e.message);
+    }).listenForWhisper('typing', function (e) {
+      if (e.user.id == _this.activeFriend) {
+        _this.typingFriend = e.user;
+        if (_this.typingClock) clearTimeout();
+        _this.typingClock = setTimeout(function () {
+          _this.typingFriend = {};
+        }, 9000);
+      }
     });
   },
   computed: {
@@ -2204,8 +2225,6 @@ __webpack_require__.r(__webpack_exports__);
         message: this.newMessage
       }).then(function (response) {
         _this5.newMessage = null;
-
-        _this5.messages.push(response.data.message);
       });
     }
   }
