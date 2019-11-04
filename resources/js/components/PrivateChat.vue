@@ -22,11 +22,12 @@
                                 <div class="d-flex bd-highlight">
                                     <div class="img_cont">
                                         <img :src="'storage/'+friend.avatar" class="rounded-circle user_img">
-                                        <span class="online_icon"></span>
+                                        <span :class="(onlineFriends.find(user=>user.id===friend.id))?'online_icon':'online_icon offline'"></span>
                                     </div>
                                     <div class="user_info">
                                         <span>{{friend.name}}</span>
-                                        <p>esta en linea</p>
+										<p v-if="onlineFriends.find(user=>user.id===friend.id)">en linea</p>
+                                        <p v-else>desconectado</p>
                                     </div>
                                 </div>
                             </li>
@@ -72,13 +73,30 @@
 									{{ message.message }}
 									<span class="msg_time">{{message.user.name}}</span>
 								</div>
+								<div class="image-container">
+									<img v-if="message.image"  :src="'/storage/'+message.image" alt="">
+								</div>
 							</div>
 						</div>
 					</div>
                     <div class="card-footer">
                         <div class="input-group">
                             <div class="input-group-append">
-									<span class="input-group-text attach_btn"><i class="fas fa-paperclip"></i></span>
+								 <picker v-if="emoStatus" set="emojione" @select="onInput" title="Pick your emoji…" />
+								<span class="input-group-text attach_btn" @click="toggleEmo">
+									<i class="fas fa-grin-hearts"></i>
+								</span>
+								<span class="input-group-text attach_btn">
+									 <file-upload
+											:post-action="'/private-messages/'+activeFriend"
+											ref='upload'
+											v-model="files"
+											@input-file="$refs.upload.active = true"
+											:headers="{'X-CSRF-TOKEN': token}"
+									>
+									<i class="fas fa-paperclip"></i>
+									</file-upload>
+								</span>							
 							</div>
 							<textarea
 									@keyup.enter="sendMessage"
@@ -93,7 +111,7 @@
                         </div>
 						
                     </div>
-					<span  v-if="activeUser" >{{ activeUser.name }} esta escribiendo...</span>
+					<span  v-if="typingFriend.name" >{{ typingFriend.name }} esta escribiendo...</span>
                 </div>
             </div>
         </div>
@@ -103,11 +121,16 @@
 </template>
 
 <script>
+ import { Picker } from 'emoji-mart-vue'
     export default {
-        props:['user'],
+		props:['user'],
+		components:{
+		Picker
+		},
         data() {
             return {
-                messages: [],
+				messages: [],
+				files:[],
 				newMessage: null,
 				activeFriend: null,
 				typingFriend:{},
@@ -115,7 +138,9 @@
                 users:[],
                 activeUser: false,
 				typingTimer: false,
-				 typingClock:null,
+				typingClock:null,
+				emoStatus:false,
+				token:document.head.querySelector('meta[name="csrf-token"]').content
             }
         },
         created() {
@@ -158,8 +183,20 @@
 			}
 		},
 		watch:{
+			 files:{
+				deep:true,
+				handler(){
+					let success=this.files[0].success;
+					if(success){
+						this.fetchMessages();
+					}
+				}
+			},
 			activeFriend(val){
 				this.fetchMessages();
+			},
+			'$refs.upload'(val){
+				console.log(val);
 			}
         },
         methods: {
@@ -191,14 +228,31 @@
 				 if(!this.activeFriend){
 				return alert('Porfavor seleccione un amigo');
 				}
-					  this.messages.push({
-							user: this.user,
-							message: this.newMessage
-						});
-						 axios.post('/private-messages/'+this.activeFriend, {message: this.newMessage}).then(response => {
-									this.newMessage=null;
-						});
-            }
+				this.messages.push({
+					user: this.user,
+					message: this.newMessage
+				});
+					axios.post('/private-messages/'+this.activeFriend, {message: this.newMessage}).then(response => {
+							this.newMessage=null;
+				});
+			},
+			toggleEmo(){
+				this.emoStatus= !this.emoStatus;
+			},
+			 onInput(e){
+				if(!e){
+				return false;
+				}
+				if(!this.newMessage){
+				this.newMessage=e.native;
+				}else{
+				this.newMessage=this.newMessage + e.native;
+				}
+				this.emoStatus=false;
+			},
+			 onResponse(e){
+				console.log('onrespnse file up',e);
+			}
         },
     }
 </script>
@@ -211,7 +265,6 @@
 	       background: -webkit-linear-gradient(to right, #91EAE4, #86A8E7, #7F7FD5);
 	        background: linear-gradient(to right, #91EAE4, #86A8E7, #7F7FD5);
 		}
-
 		.chat{
 			margin-top: auto;
 			margin-bottom: auto;
