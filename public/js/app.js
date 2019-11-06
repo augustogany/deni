@@ -68995,10 +68995,12 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   broadcaster: 'pusher',
-  key: "anyKey",
-  wsHost: window.location.hostname,
-  wsPort: 6001,
-  disableStats: true
+  key: "35f5787eccb0e70e8c48",
+  cluster: "us2",
+  encrypted: true // wsHost: window.location.hostname,
+  // wsPort: 6001,
+  // disableStats: true
+
 }); // window.Echo.channel('DemoChannel')
 // .listen('WebsocketDemoEvent', (e) => {
 //     console.log(e);
