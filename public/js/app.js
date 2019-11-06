@@ -2139,6 +2139,9 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['user'],
@@ -2147,6 +2150,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   data: function data() {
     return {
+      nombre: '',
       messages: [],
       files: [],
       newMessage: null,
@@ -2198,6 +2202,13 @@ __webpack_require__.r(__webpack_exports__);
       return this.users.filter(function (user) {
         return user.id !== _this2.user.id;
       });
+    },
+    searchusers: function searchusers() {
+      var _this3 = this;
+
+      return this.friends.filter(function (user) {
+        return user.name.includes(_this3.nombre);
+      });
     }
   },
   watch: {
@@ -2213,6 +2224,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     activeFriend: function activeFriend(val) {
       this.fetchMessages();
+      this.obteneramigo(val);
     },
     '$refs.upload': function $refsUpload(val) {
       console.log(val);
@@ -2225,29 +2237,36 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     fetchMessages: function fetchMessages() {
-      var _this3 = this;
+      var _this4 = this;
 
       if (!this.activeFriend) {
         return alert('Porfavor seleccione un amigo');
       }
 
       axios.get('/private-messages/' + this.activeFriend).then(function (response) {
-        _this3.messages = response.data;
+        _this4.messages = response.data;
       });
     },
     fetchUsers: function fetchUsers() {
-      var _this4 = this;
+      var _this5 = this;
 
       axios.get('/users').then(function (response) {
-        _this4.users = response.data;
+        _this5.users = response.data;
 
-        if (_this4.friends.length > 0) {
-          _this4.activeFriend = _this4.friends[0].id;
+        if (_this5.friends.length > 0) {
+          _this5.activeFriend = _this5.friends[0].id;
         }
       });
     },
+    obteneramigo: function obteneramigo(id) {
+      var _this6 = this;
+
+      axios.get('/myfriend/' + id).then(function (response) {
+        _this6.activeUser = response.data;
+      });
+    },
     sendMessage: function sendMessage() {
-      var _this5 = this;
+      var _this7 = this;
 
       if (!this.newMessage) {
         return alert('por favor escriba el mansaje');
@@ -2264,7 +2283,7 @@ __webpack_require__.r(__webpack_exports__);
       axios.post('/private-messages/' + this.activeFriend, {
         message: this.newMessage
       }).then(function (response) {
-        _this5.newMessage = null;
+        _this7.newMessage = null;
       });
     },
     toggleEmo: function toggleEmo() {
@@ -54295,13 +54314,39 @@ var render = function() {
       _c("div", { staticClass: "row justify-content-center h-100" }, [
         _c("div", { staticClass: "col-md-4 col-xl-3 chat" }, [
           _c("div", { staticClass: "card mb-sm-3 mb-md-0 contacts_card" }, [
-            _vm._m(0),
+            _c("div", { staticClass: "card-header" }, [
+              _c("div", { staticClass: "input-group" }, [
+                _c("input", {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.nombre,
+                      expression: "nombre"
+                    }
+                  ],
+                  staticClass: "form-control search",
+                  attrs: { type: "text", placeholder: "Search..." },
+                  domProps: { value: _vm.nombre },
+                  on: {
+                    input: function($event) {
+                      if ($event.target.composing) {
+                        return
+                      }
+                      _vm.nombre = $event.target.value
+                    }
+                  }
+                }),
+                _vm._v(" "),
+                _vm._m(0)
+              ])
+            ]),
             _vm._v(" "),
             _c("div", { staticClass: "card-body contacts_body" }, [
               _c(
                 "ul",
                 { staticClass: "contacts" },
-                _vm._l(_vm.friends, function(friend, index) {
+                _vm._l(_vm.searchusers, function(friend, index) {
                   return _c(
                     "li",
                     {
@@ -54355,17 +54400,19 @@ var render = function() {
           _c("div", { staticClass: "card" }, [
             _c("div", { staticClass: "card-header msg_head" }, [
               _c("div", { staticClass: "d-flex bd-highlight" }, [
-                _c("div", { staticClass: "img_cont" }, [
-                  _c("img", {
-                    staticClass: "rounded-circle user_img",
-                    attrs: { src: "storage/" + _vm.user.avatar }
-                  }),
-                  _vm._v(" "),
-                  _c("span", { staticClass: "online_icon" })
-                ]),
+                _vm.activeUser.id
+                  ? _c("div", { staticClass: "img_cont" }, [
+                      _c("img", {
+                        staticClass: "rounded-circle user_img",
+                        attrs: { src: "storage/" + _vm.activeUser.avatar }
+                      }),
+                      _vm._v(" "),
+                      _c("span", { staticClass: "online_icon" })
+                    ])
+                  : _vm._e(),
                 _vm._v(" "),
                 _c("div", { staticClass: "user_info" }, [
-                  _c("span", [_vm._v(_vm._s(_vm.user.name))]),
+                  _c("span", [_vm._v(_vm._s(_vm.activeUser.name))]),
                   _vm._v(" "),
                   _c("p", [_vm._v("1767 Messages")])
                 ]),
@@ -54402,32 +54449,35 @@ var render = function() {
                         })
                       ]),
                       _vm._v(" "),
-                      _c(
-                        "div",
-                        {
-                          class:
-                            message.user.id != _vm.user.id
-                              ? "msg_cotainer"
-                              : "msg_cotainer_send"
-                        },
-                        [
-                          _vm._v(
-                            "\r\n\t\t\t\t\t\t\t\t\t" +
-                              _vm._s(message.message) +
-                              "\r\n\t\t\t\t\t\t\t\t\t"
-                          ),
-                          _c("span", { staticClass: "msg_time" }, [
-                            _vm._v(_vm._s(message.user.name))
-                          ])
-                        ]
-                      ),
+                      message.message != null
+                        ? _c(
+                            "div",
+                            {
+                              class:
+                                message.user.id != _vm.user.id
+                                  ? "msg_cotainer"
+                                  : "msg_cotainer_send"
+                            },
+                            [
+                              _vm._v(
+                                "\r\n\t\t\t\t\t\t\t\t\t" +
+                                  _vm._s(message.message) +
+                                  "\r\n\t\t\t\t\t\t\t\t\t"
+                              ),
+                              _c("span", { staticClass: "msg_time" }, [
+                                _vm._v(_vm._s(message.user.name))
+                              ])
+                            ]
+                          )
+                        : _vm._e(),
                       _vm._v(" "),
                       _c("div", { staticClass: "image-container" }, [
                         message.image
                           ? _c("img", {
                               attrs: {
                                 src: "/storage/" + message.image,
-                                alt: ""
+                                alt: "",
+                                width: "120px"
                               }
                             })
                           : _vm._e()
@@ -54559,18 +54609,9 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "card-header" }, [
-      _c("div", { staticClass: "input-group" }, [
-        _c("input", {
-          staticClass: "form-control search",
-          attrs: { type: "text", placeholder: "Search...", name: "" }
-        }),
-        _vm._v(" "),
-        _c("div", { staticClass: "input-group-prepend" }, [
-          _c("span", { staticClass: "input-group-text search_btn" }, [
-            _c("i", { staticClass: "fas fa-search" })
-          ])
-        ])
+    return _c("div", { staticClass: "input-group-prepend" }, [
+      _c("span", { staticClass: "input-group-text search_btn" }, [
+        _c("i", { staticClass: "fas fa-search" })
       ])
     ])
   },
@@ -68958,7 +68999,10 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   wsHost: window.location.hostname,
   wsPort: 6001,
   disableStats: true
-});
+}); // window.Echo.channel('DemoChannel')
+// .listen('WebsocketDemoEvent', (e) => {
+//     console.log(e);
+// });
 
 /***/ }),
 

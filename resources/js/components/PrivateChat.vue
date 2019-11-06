@@ -6,7 +6,7 @@
                 <div class="card mb-sm-3 mb-md-0 contacts_card">
                     <div class="card-header">
                         <div class="input-group">
-                            <input type="text" placeholder="Search..." name="" class="form-control search">
+                            <input type="text" placeholder="Search..."  class="form-control search" v-model="nombre">
 							<div class="input-group-prepend">
 								<span class="input-group-text search_btn"><i class="fas fa-search"></i></span>
 							</div>
@@ -14,7 +14,7 @@
                     </div>
                     <div class="card-body contacts_body">
                         <ul class="contacts">
-                            <li v-for="(friend,index) in friends" 
+                            <li v-for="(friend,index) in searchusers" 
 							    :class="(friend.id==activeFriend)?'active':''"
 							     :key="index"
 								 @click="activeFriend=friend.id"
@@ -40,12 +40,12 @@
                 <div class="card">
                     <div class="card-header msg_head">
                         <div class="d-flex bd-highlight">
-                            <div class="img_cont">
-                                <img :src="'storage/'+user.avatar" class="rounded-circle user_img">
+                            <div class="img_cont" v-if="activeUser.id">
+                                <img :src="'storage/'+activeUser.avatar" class="rounded-circle user_img">
 								<span class="online_icon"></span>
                             </div>
                             <div class="user_info">
-								<span>{{user.name}}</span>
+								<span>{{activeUser.name}}</span>
 								<p>1767 Messages</p>
 							</div>
                             <div  class="video_cam">
@@ -66,15 +66,18 @@
 					<div class="card-body" v-chat-scroll>
 						<div class="msg_card_body" v-for="(message, index) in messages"   :key="index" >
 							<div :class="(message.user.id != user.id)? 'd-flex justify-content-start mb-4' : 'd-flex justify-content-end mb-4'">
+								<!-- Avatar -->
 								<div class="img_cont_msg">
 									<img :src="'storage/'+message.user.avatar" class="rounded-circle user_img_msg">
 								</div>
-								<div :class="(message.user.id != user.id)? 'msg_cotainer' :'msg_cotainer_send'">
+								<!-- Mensaje -->
+								<div v-if="message.message != null" :class="(message.user.id != user.id)? 'msg_cotainer' :'msg_cotainer_send'">
 									{{ message.message }}
 									<span class="msg_time">{{message.user.name}}</span>
 								</div>
-								<div class="image-container">
-									<img v-if="message.image"  :src="'/storage/'+message.image" alt="">
+								<!-- imagen si existe -->
+								<div class="image-container" >
+									<img v-if="message.image"  :src="'/storage/'+message.image" alt="" width="120px" >
 								</div>
 							</div>
 						</div>
@@ -129,6 +132,7 @@
 		},
         data() {
             return {
+				nombre: '',
 				messages: [],
 				files:[],
 				newMessage: null,
@@ -180,6 +184,9 @@
 				return this.users.filter((user)=>{
 				return user.id !== this.user.id;
 				})
+			},
+			searchusers(){
+				return this.friends.filter( (user) => user.name.includes(this.nombre) );
 			}
 		},
 		watch:{
@@ -194,6 +201,7 @@
 			},
 			activeFriend(val){
 				this.fetchMessages();
+				this.obteneramigo(val);
 			},
 			'$refs.upload'(val){
 				console.log(val);
@@ -219,6 +227,11 @@
 					if(this.friends.length>0){
 					this.activeFriend=this.friends[0].id;
 					}
+				});
+			},
+			obteneramigo(id){
+				axios.get('/myfriend/'+id).then(response => {
+					this.activeUser = response.data;
 				});
 			},
 			 sendMessage() {

@@ -40,3 +40,10 @@ window.Echo = new Echo({
     wsPort: 6001,
     disableStats: true
 });
+
+// window.Echo.channel('DemoChannel')
+// .listen('WebsocketDemoEvent', (e) => {
+
+//     console.log(e);
+
+// });

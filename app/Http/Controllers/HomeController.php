@@ -30,4 +30,9 @@ class HomeController extends Controller
     {
         return User::all();
     }
+
+    public function amigo($id){
+     $amigo = User::findOrFail($id);
+     return response()->json($amigo);
+    }
 }
